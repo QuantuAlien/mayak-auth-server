@@ -6,7 +6,7 @@ app.use(express.json());
 // Подключение к Supabase (Переменные окружения на Render)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 1. РЕГИСТРАЦИЯ (Сервер получает уже готовые соль и хеш)
+// 1. РЕГИСТРАЦИЯ
 app.post('/register', async (req, res) => {
     const { username, salt, password_hash } = req.body;
 
@@ -14,7 +14,8 @@ app.post('/register', async (req, res) => {
         return res.status(400).json({ error: "Переданы не все криптографические данные!" });
     }
 
-    const key = username.trim().lower();
+    // ИСПРАВЛЕНО:toLowerCase() вместо lower()
+    const key = username.trim().toLowerCase(); 
 
     // Записываем данные в таблицу users в Supabase
     const { data, error } = await supabase
@@ -38,7 +39,8 @@ app.post('/get-salt', async (req, res) => {
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: "Укажите имя пользователя!" });
 
-    const key = username.trim().lower();
+    // ИСПРАВЛЕНО: toLowerCase()
+    const key = username.trim().toLowerCase(); 
 
     // Ищем пользователя, чтобы отдать клиенту его уникальную соль
     const { data: user, error } = await supabase
@@ -51,7 +53,6 @@ app.post('/get-salt', async (req, res) => {
         return res.status(400).json({ error: "Пользователь не найден." });
     }
 
-    // Возвращаем соль клиенту для локального хеширования
     res.json({ status: "success", salt: user.salt });
 });
 
@@ -60,7 +61,8 @@ app.post('/login', async (req, res) => {
     const { username, client_hash } = req.body;
     if (!username || !client_hash) return res.status(400).json({ error: "Ошибка верификации данных." });
 
-    const key = username.trim().lower();
+    // ИСПРАВЛЕНО: toLowerCase()
+    const key = username.trim().toLowerCase(); 
 
     // Запрашиваем эталонный хеш из базы
     const { data: user, error } = await supabase
@@ -86,4 +88,3 @@ app.post('/login', async (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => console.log('Крипто-бэкенд запущен!'));
-
